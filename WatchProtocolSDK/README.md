@@ -4,6 +4,12 @@
 
 ## 版本历史
 
+- [v1.0.2](./v1.0.2/) - 2026-01-10
+  - 新增步数换算方法：根据步数自动计算卡路里和距离
+  - 新增格式化方法：获取格式化的距离和卡路里值
+  - 增强健康数据模型功能
+  - 更新文档和示例代码
+
 - [v1.0.1](./v1.0.1/) - 2026-01-03
   - 首次发布
   - 完整的蓝牙设备管理功能
@@ -13,6 +19,12 @@
 ## 使用说明
 
 请查看各版本目录中的接入文档：
+
+**最新版本 v1.0.2:**
+- [v1.0.2 中文文档](./v1.0.2/WatchProtocolSDK-接入文档-中文.md)
+- [v1.0.2 English Documentation](./v1.0.2/WatchProtocolSDK-Integration-Guide-EN.md)
+
+**历史版本 v1.0.1:**
 - [v1.0.1 中文文档](./v1.0.1/WatchProtocolSDK-接入文档-中文.md)
 - [v1.0.1 English Documentation](./v1.0.1/WatchProtocolSDK-Integration-Guide-EN.md)
 

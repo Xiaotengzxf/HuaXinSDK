@@ -6,7 +6,11 @@
 	<dict>
 		<key>Headers/WPBluetoothManager.h</key>
 		<data>
-		nLpsa0ddqreT7+T5//bB0trXASw=
+		x0fx2D54wM91cdrj7NelSolfu9k=
+		</data>
+		<key>Headers/WPCommands.h</key>
+		<data>
+		ZtXW7cekvYrSC4MpvUoS7OTaDH0=
 		</data>
 		<key>Headers/WPDeviceManager.h</key>
 		<data>
@@ -51,7 +55,14 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			Ih5L+HpsoMMb4pWlbk9ytj9QAYmZgyljDv5iLPOLSns=
+			cNz3CW4lBBti6NR93/+oBAxDLzJN9wyorwN/sGez1Nc=
+			</data>
+		</dict>
+		<key>Headers/WPCommands.h</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			c6gU7e3IvIWe7xWv6Hb4zCRKQEshdHXgMWUdhTxo8+o=
 			</data>
 		</dict>
 		<key>Headers/WPDeviceManager.h</key>

@@ -64,6 +64,12 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)didDisconnectPeripheral:(WPPeripheralInfo *)peripheralInfo error:(nullable NSError *)error;
 
 /**
+ * 🆕 v2.0.2: 扫描超时（未找到目标设备）
+ * @param macAddress 目标设备的 MAC 地址
+ */
+- (void)didScanTimeout:(NSString *)macAddress;
+
+/**
  * 🆕 v2.0.1: 接收到电量数据
  * @param batteryLevel 电量百分比 (0-100)
  * @param isCharging 是否正在充电

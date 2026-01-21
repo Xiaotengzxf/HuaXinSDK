@@ -204,6 +204,42 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)reconnectToDevice;
 
+/**
+ * 🆕 v2.0.2: 使用指定设备进行自动重连
+ * @param device 要重连的设备对象
+ * @note 适用于 app 重启后的自动重连场景
+ * @note 此方法会设置 currentDevice 并启动扫描连接流程
+ */
+- (void)reconnectWithDevice:(WPBluetoothWatchDevice *)device;
+
+/**
+ * 🆕 v2.0.2: 使用指定设备进行自动重连（带超时时间）
+ * @param device 要重连的设备对象
+ * @param timeout 扫描超时时间（秒），0 或负数表示不限时
+ * @note 适用于 app 重启后的自动重连场景
+ * @note 此方法会设置 currentDevice 并启动扫描连接流程
+ */
+- (void)reconnectWithDevice:(WPBluetoothWatchDevice *)device timeout:(NSTimeInterval)timeout;
+
+/**
+ * 🆕 v2.0.2: 从沙盒恢复设备并自动重连
+ * @param macAddress 设备的 MAC 地址
+ * @return 是否成功恢复并启动重连（如果沙盒中没有该设备信息，返回 NO）
+ * @note 适用于 app 重启后的自动重连场景
+ * @note 此方法会从沙盒加载设备信息，并自动启动扫描连接流程
+ */
+- (BOOL)reconnectFromSandboxWithMac:(NSString *)macAddress;
+
+/**
+ * 🆕 v2.0.2: 从沙盒恢复设备并自动重连（带超时时间）
+ * @param macAddress 设备的 MAC 地址
+ * @param timeout 扫描超时时间（秒），0 或负数表示不限时
+ * @return 是否成功恢复并启动重连（如果沙盒中没有该设备信息，返回 NO）
+ * @note 适用于 app 重启后的自动重连场景
+ * @note 此方法会从沙盒加载设备信息，并自动启动扫描连接流程
+ */
+- (BOOL)reconnectFromSandboxWithMac:(NSString *)macAddress timeout:(NSTimeInterval)timeout;
+
 // MARK: - 🆕 v2.0.1: 健康数据查询
 
 /**

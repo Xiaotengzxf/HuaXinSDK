@@ -5,6 +5,12 @@
 //  Created by Claude on 2026/01/12.
 //  Copyright © 2026 Huaxin. All rights reserved.
 //
+//  🆕 v2.0.3 更新内容:
+//  - 修复重连死循环导致 app 崩溃的严重 bug
+//  - 添加重连次数限制（默认最大 5 次）
+//  - 添加重连状态保护机制，防止无限递归调用
+//  - 优化连接成功和断开时的状态重置逻辑
+//
 
 #import <Foundation/Foundation.h>
 #import <CoreBluetooth/CoreBluetooth.h>

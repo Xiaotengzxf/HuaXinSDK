@@ -5,6 +5,11 @@
 //  Created by Claude on 2026/01/12.
 //  Copyright © 2026 Huaxin. All rights reserved.
 //
+//  🆕 v2.0.4 更新内容:
+//  - 修复设备回连时代理方法不触发的 bug
+//  - 在连接成功/断开回调中，如果 peripheralInfoMap 中没有映射，自动创建 WPPeripheralInfo
+//  - 确保 didConnectPeripheral: 和 didDisconnectPeripheral:error: 代理方法在回连场景下也能被触发
+//
 //  🆕 v2.0.3 更新内容:
 //  - 修复重连死循环导致 app 崩溃的严重 bug
 //  - 添加重连次数限制（默认最大 5 次）

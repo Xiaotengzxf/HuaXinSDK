@@ -1,419 +1,736 @@
-# WatchProtocolSDK-ObjC 接入文档
+# WatchFaceSDK-ObjC 集成指南
 
-## 版本信息
-- **SDK 版本**: v1.0.0
-- **发布日期**: 2026-01-12
-- **支持平台**: iOS 13.0+
-- **开发语言**: Objective-C
+**版本**: 1.0.0
+**发布日期**: 2026-01-28
+**类型**: 纯 Objective-C 动态库
 
 ---
 
-## 目录
-1. [SDK 简介](#sdk-简介)
-2. [系统要求](#系统要求)
-3. [SDK 集成](#sdk-集成)
-4. [快速开始](#快速开始)
-5. [核心功能](#核心功能)
-6. [API 参考](#api-参考)
-7. [示例代码](#示例代码)
-8. [常见问题](#常见问题)
+## 📱 简介
+
+WatchFaceSDK-ObjC 是一个纯 Objective-C 实现的智能手表表盘管理 SDK，提供完整的表盘上传、管理和自定义功能。
+
+### 核心功能
+
+- ✅ **市场表盘上传** - 支持上传预制表盘文件
+- ✅ **自定义表盘** - 从照片创建个性化表盘
+- ✅ **设备信息查询** - 自动适配不同屏幕尺寸
+- ✅ **传输进度监控** - 实时追踪上传进度
+- ✅ **智能图片处理** - 自动裁剪、压缩、格式转换
+- ✅ **蓝牙优化** - 自动 MTU 协商，分包传输
 
 ---
 
-## SDK 简介
-
-WatchProtocolSDK-ObjC 是一款专为智能手表设备开发的 iOS 蓝牙通信协议 SDK，使用纯 Objective-C 实现。它提供了完整的设备连接管理、健康数据同步、协议指令处理等功能，帮助 Objective-C 项目快速集成智能手表设备功能。
-
-### 主要特性
-
-- ✅ **纯 Objective-C 实现**: 完全兼容 Objective-C 项目，无需 Swift 环境
-- ✅ **蓝牙设备管理**: 支持设备扫描、连接、断开、重连等完整生命周期管理
-- ✅ **健康数据同步**: 支持步数、睡眠、心率、血氧、血压等多种健康数据同步
-- ✅ **协议化存储**: 基于协议的数据存储设计，灵活适配不同存储方案
-- ✅ **线程安全**: 核心管理类采用线程安全设计
-- ✅ **日志系统**: 内置完善的日志记录系统，便于问题排查
-- ✅ **模块化架构**: 清晰的模块划分，易于维护和扩展
-
----
-
-## 系统要求
+## 🔧 系统要求
 
 | 项目 | 要求 |
 |------|------|
-| iOS 版本 | iOS 13.0 及以上 |
-| Xcode 版本 | Xcode 12.0 及以上 |
-| 开发语言 | Objective-C |
-| 设备蓝牙 | 支持 Bluetooth 4.0 (BLE) |
-
-### 依赖框架
-
-- `CoreBluetooth.framework` (系统框架)
-- `Foundation.framework` (系统框架)
+| **iOS** | 13.0+ |
+| **Xcode** | 12.0+ |
+| **语言** | Objective-C / Swift |
+| **依赖框架** | WatchProtocolSDK (动态库), ABParTool |
 
 ---
 
-## SDK 集成
+## 📦 集成步骤
 
-### 方式一：手动集成
+### 步骤 1: 添加框架到项目
 
-1. 将 `WatchProtocolSDK-ObjC` 文件夹拖入项目
-2. 在项目 Target -> Build Phases -> Link Binary With Libraries 中添加：
-   - `CoreBluetooth.framework`
-   - `Foundation.framework`
+将以下框架拖入 Xcode 项目：
 
-### 方式二：使用 CocoaPods
-
-在 `Podfile` 中添加：
-
-```ruby
-pod 'WatchProtocolSDK-ObjC', :path => './WatchProtocolSDK-ObjC.podspec'
+```
+✅ WatchFaceSDK_ObjC.xcframework
+✅ WatchProtocolSDK.xcframework (来自 Output-ObjC-Dynamic 目录)
+✅ ABParTool.xcframework (可选，用于图片转换)
 ```
 
-然后执行：
-```bash
-pod install
-```
+### 步骤 2: 配置框架嵌入设置 ⭐ 重要
 
-### 配置项目
+1. 选择项目 Target
+2. 进入 **General** 标签页
+3. 找到 **Frameworks, Libraries, and Embedded Content** 部分
+4. 确保设置如下：
 
-1. **添加蓝牙权限**
-   在 `Info.plist` 中添加以下权限描述：
+| 框架 | Embed 设置 |
+|------|-----------|
+| WatchFaceSDK_ObjC.xcframework | **Embed & Sign** ⭐ |
+| WatchProtocolSDK.xcframework | **Embed & Sign** ⭐ |
+| ABParTool.xcframework | **Embed & Sign** ⭐ |
 
-```xml
-<key>NSBluetoothAlwaysUsageDescription</key>
-<string>需要使用蓝牙连接智能手表设备</string>
-<key>NSBluetoothPeripheralUsageDescription</key>
-<string>需要使用蓝牙与智能手表进行数据交互</string>
-```
+**⚠️ 关键说明**：
+- 这些都是**动态库**，必须设置为 "Embed & Sign"
+- 如果设置为 "Do Not Embed"，运行时会报错：`dyld: Library not loaded`
 
-2. **导入框架**
+### 步骤 3: 导入头文件
+
+#### Objective-C 项目
 
 ```objc
-#import <WatchProtocolSDK/WatchProtocolSDK.h>
+#import <WatchFaceSDK_ObjC/WFManager.h>
+#import <WatchFaceSDK_ObjC/WFTransferDelegate.h>
+#import <WatchFaceSDK_ObjC/WFEnums.h>
+```
+
+#### Swift 项目
+
+创建 Bridging Header：
+
+```objc
+// YourProject-Bridging-Header.h
+#import <WatchFaceSDK_ObjC/WFManager.h>
+#import <WatchFaceSDK_ObjC/WFTransferDelegate.h>
+#import <WatchFaceSDK_ObjC/WFEnums.h>
+```
+
+然后在 Swift 中直接使用：
+
+```swift
+let manager = WFManager.sharedInstance()
 ```
 
 ---
 
-## 快速开始
+## 🚀 快速开始
 
-### 1. 实现数据存储协议
+### 1. 检查设备连接
 
 ```objc
-// MyHealthDataStorage.h
-#import <Foundation/Foundation.h>
-#import <WatchProtocolSDK/WPHealthDataStorage.h>
+#import <WatchFaceSDK_ObjC/WFManager.h>
 
-@interface MyHealthDataStorage : NSObject <WPHealthDataStorageProtocol>
+WFManager *manager = [WFManager sharedInstance];
+
+// 检查设备是否连接
+if ([manager isDeviceConnected]) {
+    NSLog(@"✅ 设备已连接");
+
+    // 获取设备屏幕信息
+    WFDeviceScreenInfo *screenInfo = [manager getCurrentDeviceScreenInfo];
+    NSLog(@"📱 屏幕尺寸: %ldx%ld",
+          (long)screenInfo.width,
+          (long)screenInfo.height);
+    NSLog(@"📡 MTU: %ld", (long)screenInfo.mtu);
+} else {
+    NSLog(@"❌ 设备未连接");
+}
+```
+
+### 2. 上传市场表盘
+
+```objc
+// 从文件上传
+NSURL *fileURL = [[NSBundle mainBundle] URLForResource:@"watchface"
+                                          withExtension:@"bin"];
+NSError *error = nil;
+
+BOOL success = [manager uploadMarketWatchFaceWithFileURL:fileURL
+                                                delegate:self
+                                                   error:&error];
+
+if (!success) {
+    NSLog(@"❌ 上传失败: %@", error.localizedDescription);
+}
+```
+
+### 3. 上传自定义表盘
+
+```objc
+#import <WatchFaceSDK_ObjC/WFEnums.h>
+
+UIImage *image = [UIImage imageNamed:@"my_photo.jpg"];
+
+BOOL success = [manager uploadCustomWatchFaceWithImage:image
+                                          timePosition:WFTimePositionTopCenter
+                                                 color:WFDialColorWhite
+                                              delegate:self
+                                                 error:&error];
+```
+
+### 4. 监听传输进度
+
+实现 `WFTransferDelegate` 协议：
+
+```objc
+@interface MyViewController () <WFTransferDelegate>
 @end
 
-// MyHealthDataStorage.m
-#import "MyHealthDataStorage.h"
-#import <WatchProtocolSDK/WPHealthDataModels.h>
+@implementation MyViewController
 
-@implementation MyHealthDataStorage
+#pragma mark - WFTransferDelegate
 
-- (void)saveStepData:(WPStepData *)data {
-    NSLog(@"保存步数数据: %ld steps on %@", (long)data.step, data.date);
-    // TODO: 保存到数据库
+- (void)transferDidStart {
+    NSLog(@"✅ 传输开始");
+    // 更新 UI：显示进度条
 }
 
-- (void)saveSleepData:(WPSleepData *)data {
-    NSLog(@"保存睡眠数据: deep=%ld, light=%ld, awake=%ld",
-          (long)data.deep, (long)data.light, (long)data.awake);
-    // TODO: 保存到数据库
+- (void)transferDidUpdateProgress:(WFTransferProgress *)progress {
+    CGFloat percent = progress.percentComplete;
+    NSLog(@"📤 传输进度: %.1f%% (%ld/%ld)",
+          percent,
+          (long)progress.currentPacket,
+          (long)progress.totalPackets);
+
+    // 更新 UI：更新进度条
+    dispatch_async(dispatch_get_main_queue(), ^{
+        self.progressView.progress = percent / 100.0;
+    });
 }
 
-- (void)saveHeartData:(WPHeartData *)data {
-    NSLog(@"保存心率数据: %ld bpm", (long)data.heart);
-    // TODO: 保存到数据库
+- (void)transferDidComplete {
+    NSLog(@"✅ 传输完成");
+    // 更新 UI：显示成功提示
 }
 
-- (void)saveOxygenData:(WPOxygenData *)data {
-    NSLog(@"保存血氧数据: %ld%%", (long)data.oxygen);
-    // TODO: 保存到数据库
+- (void)transferDidFailWithError:(NSError *)error {
+    NSLog(@"❌ 传输失败: %@", error.localizedDescription);
+    // 更新 UI：显示错误提示
 }
 
-- (void)saveBloodPressureData:(WPBloodPressureData *)data {
-    NSLog(@"保存血压数据: %ld/%ld mmHg", (long)data.max, (long)data.min);
-    // TODO: 保存到数据库
+- (void)transferDidCancel {
+    NSLog(@"⚠️ 传输取消");
+    // 更新 UI：恢复初始状态
 }
 
 @end
 ```
 
-### 2. 初始化 SDK
+---
+
+## 📖 API 参考
+
+### WFManager - 主管理器
+
+#### 单例
 
 ```objc
-// AppDelegate.m
-#import "AppDelegate.h"
-#import "MyHealthDataStorage.h"
-#import <WatchProtocolSDK/WatchProtocolSDK.h>
++ (instancetype)sharedInstance;
+```
 
-@implementation AppDelegate
+#### 设备信息
 
-- (BOOL)application:(UIApplication *)application
-    didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+```objc
+// 检查设备是否连接
+- (BOOL)isDeviceConnected;
 
-    // 1. 创建数据存储实例
-    MyHealthDataStorage *storage = [[MyHealthDataStorage alloc] init];
+// 获取设备屏幕信息
+- (nullable WFDeviceScreenInfo *)getCurrentDeviceScreenInfo;
 
-    // 2. 初始化设备管理器
-    [[WPDeviceManager sharedInstance] initializeWithStorage:storage];
+// 获取推荐的图片尺寸
+- (CGSize)getRecommendedImageSize;
+```
 
-    // 3. 初始化蓝牙管理器
-    [[WPBluetoothManager sharedInstance] initCentral];
+#### 市场表盘上传
 
-    return YES;
-}
+```objc
+// 从 NSData 上传
+- (BOOL)uploadMarketWatchFaceWithData:(NSData *)data
+                             delegate:(nullable id<WFTransferDelegate>)delegate
+                                error:(NSError **)error;
+
+// 从文件 URL 上传
+- (BOOL)uploadMarketWatchFaceWithFileURL:(NSURL *)fileURL
+                                delegate:(nullable id<WFTransferDelegate>)delegate
+                                   error:(NSError **)error;
+```
+
+#### 自定义表盘上传
+
+```objc
+- (BOOL)uploadCustomWatchFaceWithImage:(UIImage *)image
+                          timePosition:(WFTimePosition)timePosition
+                                 color:(WFDialColor)color
+                              delegate:(nullable id<WFTransferDelegate>)delegate
+                                 error:(NSError **)error;
+```
+
+**参数说明**:
+
+- `timePosition`: 时间显示位置
+  ```objc
+  typedef NS_ENUM(NSInteger, WFTimePosition) {
+      WFTimePositionNone = 0,
+      WFTimePositionTopLeft,
+      WFTimePositionTopCenter,
+      WFTimePositionTopRight,
+      WFTimePositionMiddleLeft,
+      WFTimePositionCenter,
+      WFTimePositionMiddleRight,
+      WFTimePositionBottomLeft,
+      WFTimePositionBottomCenter,
+      WFTimePositionBottomRight
+  };
+  ```
+
+- `color`: 时间文字颜色
+  ```objc
+  typedef NS_ENUM(NSInteger, WFDialColor) {
+      WFDialColorWhite = 0,
+      WFDialColorBlack,
+      WFDialColorRed,
+      WFDialColorGreen,
+      WFDialColorBlue,
+      WFDialColorYellow
+  };
+  ```
+
+#### 图片验证
+
+```objc
+- (BOOL)validateImage:(UIImage *)image message:(NSString **)message;
+```
+
+#### 传输控制
+
+```objc
+- (void)pauseTransfer;   // 暂停传输
+- (void)cancelTransfer;  // 取消传输
+- (void)retryTransfer;   // 重试传输
+```
+
+---
+
+### WFTransferDelegate - 传输代理
+
+```objc
+@protocol WFTransferDelegate <NSObject>
+
+@optional
+- (void)transferDidStart;
+- (void)transferDidUpdateProgress:(WFTransferProgress *)progress;
+- (void)transferDidComplete;
+- (void)transferDidFailWithError:(NSError *)error;
+- (void)transferDidCancel;
 
 @end
 ```
 
-### 3. 扫描和连接设备
+---
+
+### WFTransferProgress - 传输进度
 
 ```objc
-#import <WatchProtocolSDK/WatchProtocolSDK.h>
+@interface WFTransferProgress : NSObject
 
-@interface ViewController () <WPBluetoothManagerDelegate>
+@property (nonatomic, assign) NSInteger currentPacket;     // 当前包序号
+@property (nonatomic, assign) NSInteger totalPackets;      // 总包数
+@property (nonatomic, assign) NSInteger bytesTransferred;  // 已传输字节
+@property (nonatomic, assign) NSInteger totalBytes;        // 总字节数
+@property (nonatomic, assign, readonly) CGFloat percentComplete;  // 百分比 (0-100)
+
+@end
+```
+
+---
+
+### WFDeviceScreenInfo - 设备屏幕信息
+
+```objc
+@interface WFDeviceScreenInfo : NSObject
+
+@property (nonatomic, assign) NSInteger width;   // 屏幕宽度
+@property (nonatomic, assign) NSInteger height;  // 屏幕高度
+@property (nonatomic, assign) WFScreenShape shape;  // 屏幕形状
+@property (nonatomic, assign) NSInteger mtu;     // 蓝牙 MTU
+
+- (CGSize)cgSize;  // 转换为 CGSize
+
+@end
+```
+
+**屏幕形状枚举**:
+```objc
+typedef NS_ENUM(NSInteger, WFScreenShape) {
+    WFScreenShapeSquare = 1,  // 方形
+    WFScreenShapeRound = 2    // 圆形
+};
+```
+
+---
+
+## 💡 完整使用示例
+
+### 示例 1: 完整的自定义表盘上传流程
+
+```objc
+@interface WatchFaceViewController () <WFTransferDelegate>
+
+@property (nonatomic, strong) WFManager *manager;
+@property (nonatomic, weak) IBOutlet UIProgressView *progressView;
+@property (nonatomic, weak) IBOutlet UILabel *statusLabel;
+@property (nonatomic, weak) IBOutlet UIButton *uploadButton;
+
 @end
 
-@implementation ViewController
+@implementation WatchFaceViewController
 
 - (void)viewDidLoad {
     [super viewDidLoad];
 
-    // 设置蓝牙代理
-    [WPBluetoothManager sharedInstance].delegate = self;
+    self.manager = [WFManager sharedInstance];
 }
 
-- (IBAction)startScanButtonTapped:(id)sender {
-    // 开始扫描设备
-    [[WPBluetoothManager sharedInstance] startScanning:YES];
+- (IBAction)uploadCustomWatchFace:(id)sender {
+    // 1. 检查设备连接
+    if (![self.manager isDeviceConnected]) {
+        [self showAlert:@"请先连接设备"];
+        return;
+    }
+
+    // 2. 选择图片
+    UIImagePickerController *picker = [[UIImagePickerController alloc] init];
+    picker.delegate = self;
+    picker.sourceType = UIImagePickerControllerSourceTypePhotoLibrary;
+    [self presentViewController:picker animated:YES completion:nil];
 }
 
-- (IBAction)stopScanButtonTapped:(id)sender {
-    // 停止扫描
-    [[WPBluetoothManager sharedInstance] stopScanning];
+#pragma mark - UIImagePickerControllerDelegate
+
+- (void)imagePickerController:(UIImagePickerController *)picker
+        didFinishPickingMediaWithInfo:(NSDictionary<UIImagePickerControllerInfoKey,id> *)info {
+
+    [picker dismissViewControllerAnimated:YES completion:nil];
+
+    UIImage *image = info[UIImagePickerControllerOriginalImage];
+
+    // 3. 验证图片
+    NSString *validationMessage = nil;
+    if (![self.manager validateImage:image message:&validationMessage]) {
+        [self showAlert:validationMessage];
+        return;
+    }
+
+    // 4. 开始上传
+    self.uploadButton.enabled = NO;
+    self.statusLabel.text = @"准备上传...";
+
+    NSError *error = nil;
+    BOOL success = [self.manager uploadCustomWatchFaceWithImage:image
+                                                   timePosition:WFTimePositionTopCenter
+                                                          color:WFDialColorWhite
+                                                       delegate:self
+                                                          error:&error];
+
+    if (!success) {
+        self.uploadButton.enabled = YES;
+        [self showAlert:[NSString stringWithFormat:@"上传失败: %@",
+                        error.localizedDescription]];
+    }
 }
 
-- (void)connectToDeviceWithMac:(NSString *)macAddress {
-    // 连接指定 MAC 地址的设备
-    [[WPBluetoothManager sharedInstance] connectToDeviceWithMac:macAddress];
+#pragma mark - WFTransferDelegate
+
+- (void)transferDidStart {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        self.statusLabel.text = @"正在上传...";
+        self.progressView.progress = 0.0;
+    });
 }
 
-// MARK: - WPBluetoothManagerDelegate
-
-- (void)onBleReady {
-    NSLog(@"蓝牙已准备就绪");
+- (void)transferDidUpdateProgress:(WFTransferProgress *)progress {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        self.progressView.progress = progress.percentComplete / 100.0;
+        self.statusLabel.text = [NSString stringWithFormat:@"上传中... %.1f%%",
+                                progress.percentComplete];
+    });
 }
 
-- (void)didDiscoverPeripheral:(WPPeripheralInfo *)peripheralInfo {
-    NSLog(@"发现设备: %@ [%@]",
-          peripheralInfo.peripheral.name ?: @"未知",
-          peripheralInfo.macAddress);
-
-    // TODO: 更新 UI 显示设备列表
+- (void)transferDidComplete {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        self.statusLabel.text = @"上传成功！";
+        self.uploadButton.enabled = YES;
+        [self showAlert:@"表盘上传成功！"];
+    });
 }
 
-- (void)didConnectPeripheral:(CBPeripheral *)peripheral {
-    NSLog(@"设备连接成功: %@", peripheral.name);
-
-    // TODO: 更新 UI 状态
+- (void)transferDidFailWithError:(NSError *)error {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        self.statusLabel.text = @"上传失败";
+        self.uploadButton.enabled = YES;
+        [self showAlert:[NSString stringWithFormat:@"上传失败: %@",
+                        error.localizedDescription]];
+    });
 }
 
-- (void)didDisconnectPeripheral:(CBPeripheral *)peripheral error:(NSError *)error {
-    NSLog(@"设备已断开: %@ - %@", peripheral.name, error.localizedDescription);
+- (void)showAlert:(NSString *)message {
+    UIAlertController *alert = [UIAlertController
+        alertControllerWithTitle:@"提示"
+        message:message
+        preferredStyle:UIAlertControllerStyleAlert];
 
-    // TODO: 更新 UI 状态
-}
+    [alert addAction:[UIAlertAction actionWithTitle:@"确定"
+                                              style:UIAlertActionStyleDefault
+                                            handler:nil]];
 
-- (void)receiveData:(NSData *)data {
-    NSLog(@"接收到数据: %@", data);
-
-    // TODO: 处理接收的数据
+    [self presentViewController:alert animated:YES completion:nil];
 }
 
 @end
 ```
 
----
+### 示例 2: Swift 使用
 
-## 核心功能
+```swift
+import UIKit
 
-### 设备管理
+class WatchFaceViewController: UIViewController {
 
-```objc
-// 获取设备管理器
-WPDeviceManager *manager = [WPDeviceManager sharedInstance];
+    let manager = WFManager.sharedInstance()
 
-// 获取设备缓存列表
-NSArray<WPBluetoothWatchDevice *> *devices = manager.cacheDevices;
+    @IBOutlet weak var progressView: UIProgressView!
+    @IBOutlet weak var statusLabel: UILabel!
 
-// 添加设备到缓存
-[manager addDevice:device];
+    override func viewDidLoad() {
+        super.viewDidLoad()
+    }
 
-// 查找指定 MAC 地址的设备
-WPBluetoothWatchDevice *device = [manager findDeviceWithMac:@"XX:XX:XX:XX:XX:XX"];
+    @IBAction func uploadWatchFace(_ sender: Any) {
+        guard manager.isDeviceConnected() else {
+            showAlert("请先连接设备")
+            return
+        }
 
-// 获取最后一个设备
-WPBluetoothWatchDevice *lastDevice = [manager lastDevice];
+        let picker = UIImagePickerController()
+        picker.delegate = self
+        picker.sourceType = .photoLibrary
+        present(picker, animated: true)
+    }
+}
 
-// 清空设备缓存
-[manager clearDeviceCache];
+extension WatchFaceViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
 
-// 重新加载设备（从 UserDefaults）
-[manager reloadDevices];
-```
+    func imagePickerController(_ picker: UIImagePickerController,
+                              didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+        picker.dismiss(animated: true)
 
-### 蓝牙管理
+        guard let image = info[.originalImage] as? UIImage else { return }
 
-```objc
-// 获取蓝牙管理器
-WPBluetoothManager *btManager = [WPBluetoothManager sharedInstance];
+        var validationMessage: NSString?
+        guard manager.validate(image, message: &validationMessage) else {
+            showAlert(validationMessage as String? ?? "图片无效")
+            return
+        }
 
-// 初始化蓝牙中心
-[btManager initCentral];
+        statusLabel.text = "准备上传..."
 
-// 开始扫描设备（清空之前的扫描结果）
-[btManager startScanning:YES];
+        do {
+            try ObjCExceptionCatcher.catchException {
+                self.manager.uploadCustomWatchFace(
+                    with: image,
+                    timePosition: .topCenter,
+                    color: .white,
+                    delegate: self
+                )
+            }
+        } catch {
+            showAlert("上传失败: \(error.localizedDescription)")
+        }
+    }
+}
 
-// 开始扫描设备（保留之前的扫描结果）
-[btManager startScanning:NO];
+extension WatchFaceViewController: WFTransferDelegate {
 
-// 停止扫描
-[btManager stopScanning];
+    func transferDidStart() {
+        DispatchQueue.main.async {
+            self.statusLabel.text = "正在上传..."
+            self.progressView.progress = 0
+        }
+    }
 
-// 连接指定外设
-[btManager connectToPeripheral:peripheral];
+    func transferDidUpdate(_ progress: WFTransferProgress) {
+        DispatchQueue.main.async {
+            self.progressView.progress = Float(progress.percentComplete / 100.0)
+            self.statusLabel.text = String(format: "上传中... %.1f%%", progress.percentComplete)
+        }
+    }
 
-// 连接指定 MAC 地址的设备
-[btManager connectToDeviceWithMac:@"XX:XX:XX:XX:XX:XX"];
+    func transferDidComplete() {
+        DispatchQueue.main.async {
+            self.statusLabel.text = "上传成功！"
+            self.showAlert("表盘上传成功！")
+        }
+    }
 
-// 扫描并连接指定设备
-[btManager connectAndScanWithMac:@"XX:XX:XX:XX:XX:XX" deviceName:@"MyWatch"];
+    func transferDidFail(withError error: Error) {
+        DispatchQueue.main.async {
+            self.statusLabel.text = "上传失败"
+            self.showAlert("上传失败: \(error.localizedDescription)")
+        }
+    }
 
-// 断开当前连接
-[btManager disconnect];
-
-// 发送数据
-NSData *data = [@"Hello" dataUsingEncoding:NSUTF8StringEncoding];
-BOOL success = [btManager sendData:data];
-```
-
-### 连接失败诊断
-
-```objc
-WPDeviceManager *manager = [WPDeviceManager sharedInstance];
-
-// 追加连接失败信息
-[manager appendFailMessage:@"连接超时"];
-
-// 获取所有失败信息
-NSString *allFailures = manager.connectFailMessage;
-
-// 获取最近的失败信息数组
-NSArray<NSString *> *failures = manager.recentFailMessages;
-
-// 获取最近 5 条失败信息
-NSArray<NSString *> *recent5 = [manager getRecentFailMessagesWithCount:5];
-
-// 清空失败信息
-[manager clearFailMessages];
-```
-
----
-
-## API 参考
-
-### WPDeviceManager
-
-| 方法 | 说明 |
-|------|------|
-| `+sharedInstance` | 获取单例实例 |
-| `-initializeWithStorage:` | 初始化设备管理器（配置数据存储） |
-| `-addDevice:` | 添加设备到缓存 |
-| `-removeDeviceWithMac:` | 移除指定 MAC 地址的设备 |
-| `-findDeviceWithMac:` | 查找指定 MAC 地址的设备 |
-| `-lastDevice` | 获取最后一个设备 |
-| `-clearDeviceCache` | 清空所有设备缓存 |
-| `-reloadDevices` | 重新加载所有设备 |
-| `-appendFailMessage:` | 追加连接失败信息 |
-| `-clearFailMessages` | 清空所有连接失败信息 |
-
-### WPBluetoothManager
-
-| 方法 | 说明 |
-|------|------|
-| `+sharedInstance` | 获取单例实例 |
-| `-initCentral` | 初始化中心管理器 |
-| `-startScanning:` | 开始扫描设备 |
-| `-stopScanning` | 停止扫描设备 |
-| `-connectToPeripheral:` | 连接指定外设 |
-| `-connectToDeviceWithMac:` | 连接指定 MAC 地址的设备 |
-| `-connectAndScanWithMac:deviceName:` | 扫描并连接指定设备 |
-| `-disconnect` | 断开当前连接 |
-| `-sendData:` | 发送数据到设备 |
-
----
-
-## 示例代码
-
-完整的示例项目请参考 `Examples` 文件夹。
-
----
-
-## 常见问题
-
-### 1. 如何检查蓝牙是否已开启？
-
-```objc
-BOOL isOff = [[WPBluetoothManager sharedInstance] isBluetoothPoweredOff];
-if (isOff) {
-    NSLog(@"请打开蓝牙");
+    func showAlert(_ message: String) {
+        let alert = UIAlertController(title: "提示", message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "确定", style: .default))
+        present(alert, animated: true)
+    }
 }
 ```
 
-### 2. 如何检查设备是否已连接？
+---
 
+## ❓ 常见问题
+
+### Q1: dyld: Library not loaded 错误？
+
+**原因**: 动态库未正确嵌入。
+
+**解决方案**:
+1. 选择 Target → **General** → **Frameworks, Libraries, and Embedded Content**
+2. 确认所有框架的 Embed 设置为 **"Embed & Sign"**
+3. Clean Build Folder (⇧⌘K)
+4. 重新编译
+
+---
+
+### Q2: 链接错误：Undefined symbols for architecture arm64？
+
+**原因**: 框架未正确添加或路径错误。
+
+**解决方案**:
+1. 检查框架是否在 **Frameworks, Libraries, and Embedded Content** 列表中
+2. 清理 DerivedData：`rm -rf ~/Library/Developer/Xcode/DerivedData/*`
+3. 重新编译
+
+---
+
+### Q3: 上传失败，提示设备未连接？
+
+**原因**: 设备未通过 WatchProtocolSDK 连接。
+
+**解决方案**:
 ```objc
-BOOL connected = [[WPBluetoothManager sharedInstance] isConnected];
-```
+// 1. 确保已初始化 WatchProtocolSDK
+#import <WatchProtocolSDK/WPBluetoothManager.h>
 
-### 3. 如何保存设备到沙盒？
+WPBluetoothManager *btManager = [WPBluetoothManager sharedInstance];
+[btManager initCentral];
 
-```objc
-WPBluetoothWatchDevice *device = [[WPBluetoothWatchDevice alloc] init];
-device.deviceName = @"MyWatch";
-device.mac = @"XX:XX:XX:XX:XX:XX";
+// 2. 扫描并连接设备
+[btManager startScanning:YES];
 
-[WPBluetoothWatchDevice saveToSandbox:device];
-```
-
-### 4. 如何从沙盒加载设备？
-
-```objc
-// 通过 MAC 加载
-WPBluetoothWatchDevice *device = [WPBluetoothWatchDevice loadFromSandboxWithMac:@"XX:XX:XX:XX:XX:XX"];
-
-// 通过设备名称加载
-WPBluetoothWatchDevice *device = [WPBluetoothWatchDevice loadFromSandboxWithDeviceName:@"MyWatch"];
-```
-
-### 5. 如何查看日志文件？
-
-```objc
-NSString *logPath = [[WPLogger sharedInstance] logFilePath];
-NSLog(@"日志文件路径: %@", logPath);
+// 3. 在连接成功回调中使用 WatchFaceSDK
 ```
 
 ---
 
-## 技术支持
+### Q4: 图片验证失败？
 
-如有问题，请联系：315082431@qq.com
+**常见原因**:
+- 图片尺寸过小（建议 >= 240x240）
+- 图片格式不支持（仅支持 PNG、JPG）
+- 图片损坏或无法读取
+
+**解决方案**:
+```objc
+NSString *message = nil;
+if (![manager validateImage:image message:&message]) {
+    NSLog(@"验证失败: %@", message);
+    // 根据错误提示修正图片
+}
+```
 
 ---
 
-## 许可证
+### Q5: Swift 项目如何使用？
 
-MIT License
+需要创建 Bridging Header：
+
+1. **File** → **New** → **File** → **Header File**
+2. 命名为 `YourProject-Bridging-Header.h`
+3. 在 **Build Settings** → **Objective-C Bridging Header** 中设置路径
+4. 在 Bridging Header 中导入：
+   ```objc
+   #import <WatchFaceSDK_ObjC/WFManager.h>
+   #import <WatchFaceSDK_ObjC/WFTransferDelegate.h>
+   ```
+
+---
+
+## 🔗 依赖关系
+
+```
+WatchFaceSDK_ObjC.xcframework
+    ↓ 依赖
+WatchProtocolSDK.xcframework (动态库)
+    ↓ 依赖
+    • CoreBluetooth.framework (系统)
+    • Foundation.framework (系统)
+    ↓ 可选
+ABParTool.xcframework
+    ↓ 用于
+    • PAR 格式图片转换
+```
+
+---
+
+## 📝 错误码参考
+
+```objc
+typedef NS_ENUM(NSInteger, WFErrorCode) {
+    WFErrorCodeDeviceNotConnected = 1001,  // 设备未连接
+    WFErrorCodeInvalidData = 1002,         // 数据无效
+    WFErrorCodeInvalidImage = 1003,        // 图片无效
+    WFErrorCodeImageProcessFailed = 1004,  // 图片处理失败
+    WFErrorCodeTransferFailed = 1005       // 传输失败
+};
+```
+
+---
+
+## 🛠 调试技巧
+
+### 启用详细日志
+
+SDK 会自动输出调试日志，使用 Xcode Console 查看：
+
+```
+📱 设备屏幕信息: 240x240, 形状: 2, MTU: 240
+🔗 设备连接状态: 已连接
+🖼 处理自定义表盘 - 目标尺寸: 240x240
+📤 开始上传自定义表盘 - PAR 大小: 98765 bytes
+📡 设备 MTU: 240, 包大小: 220
+📦 总包数: 449, 文件大小: 98765 bytes
+📤 发送包 1/449 (大小: 220 bytes, 进度: 0%)
+...
+✅ 传输完成
+```
+
+### 检查框架版本
+
+```objc
+NSBundle *bundle = [NSBundle bundleForClass:[WFManager class]];
+NSString *version = bundle.infoDictionary[@"CFBundleShortVersionString"];
+NSLog(@"WatchFaceSDK 版本: %@", version);
+```
+
+---
+
+## 📞 技术支持
+
+如有问题，请提供：
+
+1. **Xcode 版本**
+2. **iOS 版本**
+3. **设备型号**
+4. **完整错误日志**
+5. **Framework Search Paths 配置**
+6. **Embed 设置截图**
+
+联系方式：315082431@qq.com
+
+---
+
+## 📄 许可证
+
+Copyright © 2026 Huaxin. All rights reserved.
+
+---
+
+## 🎉 总结
+
+WatchFaceSDK-ObjC 提供了简单易用的 API，让表盘上传功能集成变得轻而易举：
+
+✅ **3 步集成** - 添加框架 → 设置 Embed & Sign → 导入头文件
+✅ **5 行代码** - 即可实现表盘上传
+✅ **纯 Objective-C** - 无 Swift 运行时依赖
+✅ **完整文档** - 详细的 API 参考和示例代码
+
+开始使用 WatchFaceSDK-ObjC，为您的用户带来个性化的表盘体验！🚀

@@ -5,8 +5,15 @@
 //  Created by Claude on 2026/01/12.
 //  Copyright © 2026 Huaxin. All rights reserved.
 //
+//  🆕 v2.0.5 更新内容:
+//  - 新增 peripheralUUID 属性支持快速重连
+//  - 升级沙盒存储格式（兼容旧版本）
+//  - 支持 UUID 持久化存储和恢复
+//
 
 #import <Foundation/Foundation.h>
+
+@class WPPeripheralInfo;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -53,6 +60,14 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) NSInteger deviceID;
 @property (nonatomic, assign) NSInteger brandID;
 @property (nonatomic, copy, nullable) NSString *mac;
+
+// 🆕 v2.0.5: 添加 peripheral UUID 用于快速重连
+/// 设备的蓝牙外设标识符（UUID 字符串）
+/// @note 用于快速重连，无需扫描
+/// @note 首次连接成功后自动保存，支持持久化
+/// @note 示例: "12345678-1234-1234-1234-123456789ABC"
+@property (nonatomic, copy, nullable) NSString *peripheralUUID;
+
 @property (nonatomic, assign) NSInteger batteryLevel;
 @property (nonatomic, assign) BOOL isCharging;
 @property (nonatomic, assign) NSInteger deviceLanguage;
@@ -152,6 +167,22 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)calculateCalorieAndDistance;
 - (float)getFormattedDistance;
 - (float)getFormattedCalorie;
+
+// MARK: - 工厂方法
+/**
+ * 从扫描到的外设信息创建设备对象
+ * @param peripheralInfo 扫描到的外设信息
+ * @return 设备对象（仅包含基本信息：设备名和MAC地址）
+ * @note 创建的设备对象仅包含扫描时可获取的基本信息，其他属性需要连接设备后获取
+ */
++ (instancetype)deviceFromPeripheralInfo:(WPPeripheralInfo *)peripheralInfo;
+
+/**
+ * 从扫描到的外设信息创建设备对象并保存到沙盒
+ * @param peripheralInfo 扫描到的外设信息
+ * @note 这是一个便捷方法，等同于 [WPBluetoothWatchDevice saveToSandbox:[WPBluetoothWatchDevice deviceFromPeripheralInfo:peripheralInfo]]
+ */
++ (void)savePeripheralInfoToSandbox:(WPPeripheralInfo *)peripheralInfo;
 
 // MARK: - 沙盒存储方法
 + (void)saveToSandbox:(WPBluetoothWatchDevice *)device;

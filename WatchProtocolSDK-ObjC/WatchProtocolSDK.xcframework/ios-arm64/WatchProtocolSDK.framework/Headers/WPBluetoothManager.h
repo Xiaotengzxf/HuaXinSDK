@@ -5,6 +5,13 @@
 //  Created by Claude on 2026/01/12.
 //  Copyright © 2026 Huaxin. All rights reserved.
 //
+//  🆕 v2.0.7 更新内容:
+//  - 新增查找设备功能（findDeviceWithCompletion:）
+//  - 新增停止查找功能（stopFindDeviceWithCompletion:）
+//  - 新增自动停止查找功能（findDeviceWithDuration:completion:）
+//  - 新增查找状态查询属性（isFindingDevice）
+//  - 集成 WPCommands+FindDevice 能力到蓝牙管理器
+//
 //  🆕 v2.0.6 更新内容:
 //  - 新增连接超时机制（默认 30 秒），解决设备不在范围时无限等待的问题
 //  - 新增 connectionTimeout 属性，支持自定义连接超时时间
@@ -119,6 +126,13 @@ NS_ASSUME_NONNULL_BEGIN
  * @param isMonitoring YES表示正在测量，NO表示已停止
  */
 - (void)didHeartRateMonitoringStatusChanged:(BOOL)isMonitoring;
+
+/**
+ * 🆕 v2.0.8: 接收到查找设备响应
+ * @param success YES表示设备已收到指令并正在震动/响铃，NO表示执行失败
+ * @discussion 当调用查找设备指令后，设备会返回执行结果。此回调用于确认设备是否成功收到并执行了查找指令。
+ */
+- (void)didReceiveFindDeviceResponse:(BOOL)success;
 
 @end
 
@@ -240,6 +254,14 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (BOOL)sendData:(NSData *)data;
 
+/**
+ * 🔥 新增：使用WriteWithResponse模式发送数据
+ * @param data 要发送的数据
+ * @return 是否发送成功
+ * @discussion 使用此方法可以确认设备是否收到数据，适用于调试
+ */
+- (BOOL)sendDataWithResponse:(NSData *)data;
+
 // MARK: - 重连管理
 
 /**
@@ -320,6 +342,122 @@ NS_ASSUME_NONNULL_BEGIN
  * @note 测量结果通过代理方法 didReceiveHeartRate: 返回
  */
 - (void)measureHeartRateOnce;
+
+// MARK: - 🆕 v2.0.7: 查找设备功能
+
+/**
+ * 查找手环（让手环震动/响铃）
+ * @param completion 完成回调，可为 nil
+ *
+ * @discussion
+ * 发送查找指令到手环，让手环震动/响铃以帮助用户找到设备。
+ * 此方法会自动检查蓝牙连接状态，避免在未连接时发送无效指令。
+ *
+ * @note 使用示例:
+ * ```objc
+ * [[WPBluetoothManager sharedInstance] findDeviceWithCompletion:^(BOOL success, NSError *error) {
+ *     if (success) {
+ *         NSLog(@"✅ 查找指令已发送，手环应该在震动");
+ *     } else {
+ *         NSLog(@"❌ 发送失败: %@", error.localizedDescription);
+ *     }
+ * }];
+ * ```
+ *
+ * @warning 如果设备未连接，completion 会返回 success=NO 和相应错误
+ * @warning 如果已在查找中，会忽略重复请求并返回 success=YES
+ */
+- (void)findDeviceWithCompletion:(nullable void(^)(BOOL success, NSError * _Nullable error))completion;
+
+/**
+ * 停止查找手环
+ * @param completion 完成回调，可为 nil
+ *
+ * @discussion
+ * 主动停止手环震动/响铃。用户找到设备后可立即调用此方法停止查找。
+ *
+ * @note 使用示例:
+ * ```objc
+ * // 用户点击"停止查找"按钮时
+ * [[WPBluetoothManager sharedInstance] stopFindDeviceWithCompletion:^(BOOL success, NSError *error) {
+ *     if (success) {
+ *         NSLog(@"⏹ 已停止查找");
+ *     }
+ * }];
+ * ```
+ */
+- (void)stopFindDeviceWithCompletion:(nullable void(^)(BOOL success, NSError * _Nullable error))completion;
+
+/**
+ * 查找手环（自动停止）
+ * @param duration 持续时间（秒），0 或负数表示使用设备默认时长
+ * @param completion 完成回调（在停止查找后调用），可为 nil
+ *
+ * @discussion
+ * 查找指定时长后自动发送停止指令，避免手环长时间震动影响电量。
+ *
+ * @note 使用示例:
+ * ```objc
+ * // 查找 5 秒后自动停止
+ * [[WPBluetoothManager sharedInstance] findDeviceWithDuration:5 completion:^(BOOL success, NSError *error) {
+ *     if (success) {
+ *         NSLog(@"查找已自动结束");
+ *     }
+ * }];
+ * ```
+ *
+ * @note 如果在自动停止前手动调用 stopFindDeviceWithCompletion:，定时器会被自动取消
+ */
+- (void)findDeviceWithDuration:(NSTimeInterval)duration
+                    completion:(nullable void(^)(BOOL success, NSError * _Nullable error))completion;
+
+/**
+ * 是否正在查找设备
+ *
+ * @discussion
+ * 可用于 UI 状态更新，例如切换按钮文字（"查找设备" ↔ "停止查找"）
+ *
+ * @note 使用示例:
+ * ```objc
+ * if ([[WPBluetoothManager sharedInstance] isFindingDevice]) {
+ *     [self.findButton setTitle:@"停止查找" forState:UIControlStateNormal];
+ * } else {
+ *     [self.findButton setTitle:@"查找设备" forState:UIControlStateNormal];
+ * }
+ * ```
+ */
+@property (nonatomic, readonly) BOOL isFindingDevice;
+
+// MARK: - 🔥 抬手亮屏功能
+
+/**
+ * 设置抬手亮屏开关
+ * @param enable YES = 开启抬手亮屏，NO = 关闭抬手亮屏
+ * @param completion 完成回调
+ *
+ * @discussion 开启后，抬起手腕时手表屏幕会自动点亮
+ * @note 需要设备已连接
+ *
+ * @note 使用示例:
+ * ```objc
+ * [[WPBluetoothManager sharedInstance] setRaiseToWake:YES completion:^(BOOL success, NSError *error) {
+ *     if (success) {
+ *         NSLog(@"抬手亮屏已开启");
+ *     } else {
+ *         NSLog(@"设置失败: %@", error.localizedDescription);
+ *     }
+ * }];
+ * ```
+ */
+- (void)setRaiseToWake:(BOOL)enable completion:(nullable void(^)(BOOL success, NSError * _Nullable error))completion;
+
+/**
+ * 查询抬手亮屏状态
+ * @param completion 完成回调
+ *
+ * @discussion 发送查询指令，设备响应通过 WPBluetoothManagerDelegate 回调
+ */
+- (void)getRaiseToWakeStatus:(nullable void(^)(BOOL success, NSError * _Nullable error))completion;
 
 @end
 

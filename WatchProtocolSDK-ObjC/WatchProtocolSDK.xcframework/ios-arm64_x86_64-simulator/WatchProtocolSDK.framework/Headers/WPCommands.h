@@ -580,6 +580,18 @@ typedef NS_ENUM(UInt8, WPCommandType) {
  */
 + (void)setQRCode:(uint8_t)type qrString:(NSString *)qrString;
 
+// MARK: - 辅助方法（供 Category 使用）
+
+/**
+ * 创建指令数据包
+ * @param bytes 字节数组（NSNumber 数组）
+ * @return 指令数据包
+ *
+ * @note 此方法用于将字节数组转换为 NSData 格式的指令
+ * @note v2.0.7+: 声明为公开方法，供 WPCommands+FindDevice 等 Category 使用
+ */
++ (NSData *)createCommandWithBytes:(NSArray<NSNumber *> *)bytes;
+
 // MARK: - 🔥 核心响应解析方法
 
 /**

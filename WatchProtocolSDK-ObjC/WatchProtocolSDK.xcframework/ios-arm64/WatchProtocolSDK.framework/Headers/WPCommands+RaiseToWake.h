@@ -25,6 +25,13 @@ NS_ASSUME_NONNULL_BEGIN
  *
  * @discussion 开启后，抬起手腕时手表屏幕会自动点亮
  * @note 需要设备已连接且蓝牙已开启
+ * @note 参考 Swift 实现：DeviceSettingsViewController.swift:436-448
+ *
+ * @implementation 完整实现：
+ * 1. 更新设备模型中的 isRaiseHandToBrightenScreen 属性
+ * 2. 读取设备模型的所有开关状态
+ * 3. 组合所有开关位到 p0 和 p1 字节
+ * 4. 发送完整的开关状态，保护其他开关不受影响
  */
 + (void)setRaiseToWake:(BOOL)enable completion:(nullable void(^)(BOOL success, NSError * _Nullable error))completion;
 

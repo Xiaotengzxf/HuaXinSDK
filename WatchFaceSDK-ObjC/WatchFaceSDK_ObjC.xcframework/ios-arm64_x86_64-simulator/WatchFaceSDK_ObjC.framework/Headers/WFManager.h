@@ -7,9 +7,9 @@
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
-#import "../Models/WFEnums.h"
-#import "../Models/WFDeviceScreenInfo.h"
-#import "../Protocols/WFTransferDelegate.h"
+#import "WFEnums.h"
+#import "WFDeviceScreenInfo.h"
+#import "WFTransferDelegate.h"
 
 NS_ASSUME_NONNULL_BEGIN
 

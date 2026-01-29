@@ -6,9 +6,9 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "../Models/WFTransferProgress.h"
-#import "../Protocols/WFTransferDelegate.h"
-#import "../Models/WFEnums.h"
+#import "WFTransferProgress.h"
+#import "WFTransferDelegate.h"
+#import "WFEnums.h"
 
 NS_ASSUME_NONNULL_BEGIN
 

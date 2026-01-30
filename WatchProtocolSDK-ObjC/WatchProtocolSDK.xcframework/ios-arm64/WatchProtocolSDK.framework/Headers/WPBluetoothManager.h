@@ -134,6 +134,15 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)didReceiveFindDeviceResponse:(BOOL)success;
 
+/**
+ * 🆕 v2.0.9: 接收到睡眠监测数据
+ * @param deepSleep 深睡时长（分钟）
+ * @param lightSleep 浅睡时长（分钟）
+ * @param awake 清醒时长（分钟）
+ * @discussion 当接收到设备的睡眠监测数据响应时触发（指令 0xB5）
+ */
+- (void)didReceiveSleepData:(NSInteger)deepSleep lightSleep:(NSInteger)lightSleep awake:(NSInteger)awake;
+
 @end
 
 // MARK: - 蓝牙管理器（单例）

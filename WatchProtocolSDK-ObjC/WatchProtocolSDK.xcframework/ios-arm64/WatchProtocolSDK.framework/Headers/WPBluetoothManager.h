@@ -143,6 +143,16 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)didReceiveSleepData:(NSInteger)deepSleep lightSleep:(NSInteger)lightSleep awake:(NSInteger)awake;
 
+/**
+ * 🆕 v2.0.10: 接收到开关状态数据
+ * @param p0 P0 字节（包含多个开关位：防丢、抬手亮屏、睡眠监测等）
+ * @param p1 P1 字节（包含多个开关位：消息显示、声音、震动等）
+ * @discussion 当接收到设备的开关状态查询响应时触发（指令 0x80）
+ * @discussion 解析方式（以抬手亮屏为例）：BOOL raiseToWake = ((p0 >> 1) & 1) > 0
+ * @note 此回调会自动更新 currentDevice 中的所有开关状态属性
+ */
+- (void)didReceiveSwitchStatus:(NSInteger)p0 p1:(NSInteger)p1;
+
 @end
 
 // MARK: - 蓝牙管理器（单例）

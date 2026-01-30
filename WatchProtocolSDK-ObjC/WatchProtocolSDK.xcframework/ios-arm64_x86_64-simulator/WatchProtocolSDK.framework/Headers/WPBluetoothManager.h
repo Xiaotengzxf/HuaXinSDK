@@ -41,6 +41,8 @@
 #import <CoreBluetooth/CoreBluetooth.h>
 
 @class WPBluetoothWatchDevice;
+@class WPAlarmData;
+@class WPReminderInfo;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -161,6 +163,42 @@ NS_ASSUME_NONNULL_BEGIN
  * @note 参考 Swift 实现：XGZTCommands.swift switchStatus 处理模式
  */
 - (void)didReceiveScreenBrightness:(NSInteger)brightness;
+
+/**
+ * 🆕 v2.0.11: 接收到闹钟总数和可用数量
+ * @param count 闹钟总数
+ * @param canUse 可用闹钟数量
+ * @discussion 当接收到设备的闹钟查询响应时触发（指令 0x83，查询类型）
+ * @note 此回调会自动更新 currentDevice.alarmCount 和 currentDevice.alarmCanUse 属性
+ */
+- (void)didUpdateAlarmCount:(NSInteger)count canUse:(NSInteger)canUse;
+
+/**
+ * 🆕 v2.0.11: 接收到闹钟详细信息
+ * @param alarm 闹钟数据对象（包含索引、时间、开关、重复周期等）
+ * @discussion 当接收到设备的闹钟详细信息响应时触发（指令 0x83）
+ * @note 此回调会自动更新 currentDevice.alarms 数组中的对应闹钟
+ * @note 参考 Swift 实现：XGZTCommands.swift alarmInfo 处理（1533-1560行）
+ */
+- (void)didUpdateAlarmInfo:(WPAlarmData *)alarm;
+
+/**
+ * 🆕 v2.0.11: 接收到久坐提醒信息
+ * @param reminder 久坐提醒数据对象（包含时间段、间隔等）
+ * @discussion 当接收到设备的久坐提醒查询响应时触发（指令 0x85，eventType=0）
+ * @note 此回调会自动更新 currentDevice.longSit 属性
+ * @note 参考 Swift 实现：XGZTCommands.swift reminderInfo 处理（1579-1581行）
+ */
+- (void)didUpdateLongSitReminder:(WPReminderInfo *)reminder;
+
+/**
+ * 🆕 v2.0.11: 接收到喝水提醒信息
+ * @param reminder 喝水提醒数据对象（包含时间段、间隔等）
+ * @discussion 当接收到设备的喝水提醒查询响应时触发（指令 0x85，eventType=1）
+ * @note 此回调会自动更新 currentDevice.drinkWater 属性
+ * @note 参考 Swift 实现：XGZTCommands.swift reminderInfo 处理（1582-1586行）
+ */
+- (void)didUpdateDrinkWaterReminder:(WPReminderInfo *)reminder;
 
 @end
 

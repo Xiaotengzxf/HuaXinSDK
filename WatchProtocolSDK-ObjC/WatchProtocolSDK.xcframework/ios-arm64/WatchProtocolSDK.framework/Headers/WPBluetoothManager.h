@@ -525,6 +525,141 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)getRaiseToWakeStatus:(nullable void(^)(BOOL success, NSError * _Nullable error))completion;
 
+// MARK: - 🔥 闹钟功能
+
+/**
+ * 查询闹钟总数和可用数量
+ * @param completion 完成回调
+ *
+ * @discussion 查询结果通过代理方法 didUpdateAlarmCount:canUse: 返回
+ * @note 参考 WPCommands+Alarm
+ */
+- (void)queryAlarmCount:(nullable void(^)(BOOL success, NSError * _Nullable error))completion;
+
+/**
+ * 查询指定闹钟的详细信息
+ * @param alarmId 闹钟索引（从 0 开始）
+ * @param completion 完成回调
+ *
+ * @discussion 查询结果通过代理方法 didUpdateAlarmInfo: 返回
+ */
+- (void)queryAlarmInfo:(NSInteger)alarmId completion:(nullable void(^)(BOOL success, NSError * _Nullable error))completion;
+
+/**
+ * 设置闹钟
+ * @param alarm 闹钟数据对象
+ * @param completion 完成回调
+ *
+ * @note 使用示例:
+ * ```objc
+ * WPAlarmData *alarm = [[WPAlarmData alloc] init];
+ * alarm.alarmId = 0;
+ * alarm.enabled = YES;
+ * alarm.hour = 7;
+ * alarm.minute = 30;
+ * alarm.repeatDays = 0b01111110; // 周一到周五
+ *
+ * [[WPBluetoothManager sharedInstance] setAlarm:alarm completion:^(BOOL success, NSError *error) {
+ *     if (success) {
+ *         NSLog(@"✅ 闹钟设置成功");
+ *     }
+ * }];
+ * ```
+ */
+- (void)setAlarm:(WPAlarmData *)alarm completion:(nullable void(^)(BOOL success, NSError * _Nullable error))completion;
+
+/**
+ * 删除闹钟
+ * @param alarmId 闹钟索引
+ * @param completion 完成回调
+ */
+- (void)deleteAlarm:(NSInteger)alarmId completion:(nullable void(^)(BOOL success, NSError * _Nullable error))completion;
+
+/**
+ * 查询所有闹钟
+ * @param completion 完成回调
+ *
+ * @discussion 先查询闹钟总数，然后逐个查询每个闹钟的详细信息
+ */
+- (void)queryAllAlarms:(nullable void(^)(BOOL success, NSError * _Nullable error))completion;
+
+// MARK: - 🔥 久坐提醒和喝水提醒功能
+
+/**
+ * 查询久坐提醒设置
+ * @param completion 完成回调
+ *
+ * @discussion 查询结果通过代理方法 didUpdateLongSitReminder: 返回
+ */
+- (void)queryLongSitReminder:(nullable void(^)(BOOL success, NSError * _Nullable error))completion;
+
+/**
+ * 查询喝水提醒设置
+ * @param completion 完成回调
+ *
+ * @discussion 查询结果通过代理方法 didUpdateDrinkWaterReminder: 返回
+ */
+- (void)queryDrinkWaterReminder:(nullable void(^)(BOOL success, NSError * _Nullable error))completion;
+
+/**
+ * 设置久坐提醒
+ * @param reminder 久坐提醒数据对象
+ * @param completion 完成回调
+ *
+ * @note 使用示例:
+ * ```objc
+ * WPReminderInfo *reminder = [[WPReminderInfo alloc] init];
+ * reminder.enabled = YES;
+ * reminder.startHour = 9;
+ * reminder.startMinute = 0;
+ * reminder.endHour = 18;
+ * reminder.endMinute = 0;
+ * reminder.interval = 60;  // 每60分钟提醒一次
+ *
+ * [[WPBluetoothManager sharedInstance] setLongSitReminder:reminder completion:^(BOOL success, NSError *error) {
+ *     if (success) {
+ *         NSLog(@"✅ 久坐提醒设置成功");
+ *     }
+ * }];
+ * ```
+ */
+- (void)setLongSitReminder:(WPReminderInfo *)reminder completion:(nullable void(^)(BOOL success, NSError * _Nullable error))completion;
+
+/**
+ * 设置喝水提醒
+ * @param reminder 喝水提醒数据对象
+ * @param completion 完成回调
+ */
+- (void)setDrinkWaterReminder:(WPReminderInfo *)reminder completion:(nullable void(^)(BOOL success, NSError * _Nullable error))completion;
+
+/**
+ * 开启久坐提醒（使用默认参数）
+ * @param completion 完成回调
+ *
+ * @discussion 默认参数：时段 09:00-18:00，间隔 60分钟
+ */
+- (void)enableLongSitReminderWithCompletion:(nullable void(^)(BOOL success, NSError * _Nullable error))completion;
+
+/**
+ * 关闭久坐提醒
+ * @param completion 完成回调
+ */
+- (void)disableLongSitReminderWithCompletion:(nullable void(^)(BOOL success, NSError * _Nullable error))completion;
+
+/**
+ * 开启喝水提醒（使用默认参数）
+ * @param completion 完成回调
+ *
+ * @discussion 默认参数：时段 08:00-20:00，间隔 120分钟
+ */
+- (void)enableDrinkWaterReminderWithCompletion:(nullable void(^)(BOOL success, NSError * _Nullable error))completion;
+
+/**
+ * 关闭喝水提醒
+ * @param completion 完成回调
+ */
+- (void)disableDrinkWaterReminderWithCompletion:(nullable void(^)(BOOL success, NSError * _Nullable error))completion;
+
 @end
 
 NS_ASSUME_NONNULL_END

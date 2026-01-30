@@ -153,6 +153,15 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)didReceiveSwitchStatus:(NSInteger)p0 p1:(NSInteger)p1;
 
+/**
+ * 🆕 v2.0.10: 接收到屏幕亮度数据
+ * @param brightness 屏幕亮度值（0-100）
+ * @discussion 当接收到设备的屏幕亮度查询响应时触发（指令 0x52）
+ * @note 此回调会自动更新 currentDevice.screenBrightness 属性
+ * @note 参考 Swift 实现：XGZTCommands.swift switchStatus 处理模式
+ */
+- (void)didReceiveScreenBrightness:(NSInteger)brightness;
+
 @end
 
 // MARK: - 蓝牙管理器（单例）

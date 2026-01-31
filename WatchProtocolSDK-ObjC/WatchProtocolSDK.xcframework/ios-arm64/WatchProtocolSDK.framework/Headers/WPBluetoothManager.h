@@ -165,6 +165,19 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)didReceiveScreenBrightness:(NSInteger)brightness;
 
 /**
+ * 🆕 v2.0.12: 接收到开关表扩展数据（应用通知开关）
+ * @param p0 P0 字节（包含第一组通知开关：空消息、来电、未接来电、短信、邮件、日程、FaceTime、QQ）
+ * @param p1 P1 字节（包含第二组通知开关：Skype、微信、WhatsApp、Gmail、Hangout、Inbox、Line、Twitter）
+ * @param p2 P2 字节（包含第三组通知开关：Facebook、Facebook Messenger、Instagram、微博、KakaoTalk、Facebook Page Manager、Viber、VK Client）
+ * @param p3 P3 字节（包含第四组通知开关：Telegram、Snapchat、钉钉、支付宝、TikTok、LinkedIn）
+ * @discussion 当接收到设备的开关表扩展查询响应时触发（指令 0x86）
+ * @discussion 解析方式（以微信为例）：BOOL wechat = ((p1 >> 1) & 1) > 0
+ * @note 此回调会自动更新 currentDevice 中所有应用通知开关属性（如 isWechat、isFacebook 等）
+ * @note 参考 Swift 实现：XGZTCommands.swift:1587-1633
+ */
+- (void)didReceiveSwitchTableExtension:(NSInteger)p0 p1:(NSInteger)p1 p2:(NSInteger)p2 p3:(NSInteger)p3;
+
+/**
  * 🆕 v2.0.11: 接收到闹钟总数和可用数量
  * @param count 闹钟总数
  * @param canUse 可用闹钟数量
@@ -331,9 +344,33 @@ NS_ASSUME_NONNULL_BEGIN
 // MARK: - 重连管理
 
 /**
- * 重连到设备
+ * @deprecated 此方法将在 v3.0.0 中删除，请使用更明确的重连方法替代
+ *
+ * @discussion
+ * **推荐的替代方案**:
+ * 1. **最快速度** - 使用 UUID 重连（<1秒）:
+ *    ```objc
+ *    NSString *uuid = [WPBluetoothManager sharedInstance].currentDevice.peripheralUUID;
+ *    if (uuid) {
+ *        [[WPBluetoothManager sharedInstance] reconnectWithUUID:uuid];
+ *    }
+ *    ```
+ *
+ * 2. **智能重连** - 自动选择最优策略（UUID 优先，自动降级到 MAC 扫描）:
+ *    ```objc
+ *    WPBluetoothWatchDevice *device = [WPBluetoothManager sharedInstance].currentDevice;
+ *    [[WPBluetoothManager sharedInstance] reconnectWithDevice:device];
+ *    ```
+ *
+ * 3. **App 重启场景** - 从沙盒恢复设备信息并重连:
+ *    ```objc
+ *    [[WPBluetoothManager sharedInstance] reconnectFromSandboxWithMac:@"AA:BB:CC:DD:EE:FF"];
+ *    ```
+ *
+ * @warning 此方法缺乏超时控制和 UUID 优化，可能导致重连缓慢或无限等待
+ * @note 迁移时间线: v2.1.0 标记过时 → v3.0.0 正式删除
  */
-- (void)reconnectToDevice;
+- (void)reconnectToDevice __attribute__((deprecated("Use reconnectWithUUID:, reconnectWithDevice:, or reconnectFromSandboxWithMac: instead")));
 
 /**
  * 🆕 v2.0.2: 使用指定设备进行自动重连
@@ -493,6 +530,101 @@ NS_ASSUME_NONNULL_BEGIN
  * ```
  */
 @property (nonatomic, readonly) BOOL isFindingDevice;
+
+// MARK: - 🆕 v2.0.12: 开关表扩展功能（应用通知开关管理）
+
+/**
+ * 查询开关表扩展（带完成回调）
+ * @param completion 完成回调
+ *
+ * @discussion
+ * 查询设备的所有应用通知开关状态（如微信、QQ、Facebook 等）。
+ * 此方法会自动检查蓝牙连接状态，避免在未连接时发送无效指令。
+ *
+ * @note 使用示例:
+ * ```objc
+ * [[WPBluetoothManager sharedInstance] getSwitchTableExtensionWithCompletion:^(BOOL success, uint8_t p0, uint8_t p1, uint8_t p2, uint8_t p3, NSError *error) {
+ *     if (success) {
+ *         // 解析微信开关状态（P1 的 bit 1）
+ *         BOOL wechatEnabled = ((p1 >> 1) & 1) > 0;
+ *         NSLog(@"微信通知: %@", wechatEnabled ? @"开启" : @"关闭");
+ *     } else {
+ *         NSLog(@"查询失败: %@", error.localizedDescription);
+ *     }
+ * }];
+ * ```
+ *
+ * @warning 如果设备未连接，completion 会返回 success=NO 和相应错误
+ * @note 查询结果也会自动更新到 currentDevice 的相关属性（如 isWechat、isFacebook 等）
+ * @note 查询结果也会触发代理回调 didReceiveSwitchTableExtension:p1:p2:p3:
+ */
+- (void)getSwitchTableExtensionWithCompletion:(nullable void(^)(BOOL success, uint8_t p0, uint8_t p1, uint8_t p2, uint8_t p3, NSError * _Nullable error))completion;
+
+/**
+ * 设置开关表扩展（带完成回调）
+ * @param p0 P0 字节（包含第一组通知开关）
+ * @param p1 P1 字节（包含第二组通知开关）
+ * @param p2 P2 字节（包含第三组通知开关）
+ * @param p3 P3 字节（包含第四组通知开关）
+ * @param completion 完成回调
+ *
+ * @discussion
+ * 设置设备的应用通知开关状态。每个字节包含 8 个开关位（P3 只使用 6 个）。
+ *
+ * @note 使用示例:
+ * ```objc
+ * // 从当前设备读取开关状态并修改微信通知
+ * WPBluetoothWatchDevice *device = [WPBluetoothManager sharedInstance].currentDevice;
+ * device.isWechat = YES;
+ *
+ * // 重新计算各字节（使用 WPCommands+SwitchTableExtension 的辅助方法）
+ * uint8_t p0 = [WPCommands calculateP0FromDevice:device];
+ * uint8_t p1 = [WPCommands calculateP1FromDevice:device];
+ * uint8_t p2 = [WPCommands calculateP2FromDevice:device];
+ * uint8_t p3 = [WPCommands calculateP3FromDevice:device];
+ *
+ * [[WPBluetoothManager sharedInstance] setSwitchTableExtensionWithP0:p0 p1:p1 p2:p2 p3:p3 completion:^(BOOL success, NSError *error) {
+ *     if (success) {
+ *         NSLog(@"✅ 设置成功");
+ *     } else {
+ *         NSLog(@"❌ 设置失败: %@", error.localizedDescription);
+ *     }
+ * }];
+ * ```
+ *
+ * @warning 如果设备未连接，completion 会返回 success=NO 和相应错误
+ * @note 位定义详见 WPCommands+SwitchTableExtension.h
+ */
+- (void)setSwitchTableExtensionWithP0:(uint8_t)p0
+                                   p1:(uint8_t)p1
+                                   p2:(uint8_t)p2
+                                   p3:(uint8_t)p3
+                           completion:(nullable void(^)(BOOL success, NSError * _Nullable error))completion;
+
+/**
+ * 便捷方法：直接从设备对象设置开关表扩展
+ * @param device 设备对象（从中读取所有通知开关属性）
+ * @param completion 完成回调
+ *
+ * @discussion
+ * 这是一个便捷方法，会自动从设备对象中读取所有通知开关属性，
+ * 计算出 P0-P3 字节，然后调用设置方法。
+ *
+ * @note 使用示例:
+ * ```objc
+ * WPBluetoothWatchDevice *device = [WPBluetoothManager sharedInstance].currentDevice;
+ * device.isWechat = YES;
+ * device.isFacebook = NO;
+ *
+ * [[WPBluetoothManager sharedInstance] setSwitchTableExtensionFromDevice:device completion:^(BOOL success, NSError *error) {
+ *     if (success) {
+ *         NSLog(@"✅ 设置成功");
+ *     }
+ * }];
+ * ```
+ */
+- (void)setSwitchTableExtensionFromDevice:(WPBluetoothWatchDevice *)device
+                               completion:(nullable void(^)(BOOL success, NSError * _Nullable error))completion;
 
 // MARK: - 🔥 抬手亮屏功能
 

@@ -10,7 +10,7 @@
 		</data>
 		<key>Headers/WPBluetoothManager.h</key>
 		<data>
-		4OwDXay+avoSNG80FrDvUOzG0zM=
+		9qOqc5mV+/Vxh/bp5ldD2qIrxko=
 		</data>
 		<key>Headers/WPCommands+Alarm.h</key>
 		<data>
@@ -27,6 +27,10 @@
 		<key>Headers/WPCommands+Reminder.h</key>
 		<data>
 		8ZmXhG2oeoogtL8uA/6y4a2dnso=
+		</data>
+		<key>Headers/WPCommands+SwitchTableExtension.h</key>
+		<data>
+		mHcKBf7+ed87as1FFKQ1rQm806Q=
 		</data>
 		<key>Headers/WPCommands.h</key>
 		<data>
@@ -58,7 +62,7 @@
 		</data>
 		<key>Headers/WatchProtocolSDK.h</key>
 		<data>
-		n4NM2cve/MZxJkyAiXA154QcKZM=
+		dukEX5Hv1gy47seXwEqfMhIZ65U=
 		</data>
 		<key>Info.plist</key>
 		<data>
@@ -82,7 +86,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			2qM4/GYnMJde7Tbz/EE8z8+Xevrf/irA3uLgLXzvQZs=
+			CgK1WOYsi9XgNARBagZGDST3zUEqmZ6KF9MYUZLWv00=
 			</data>
 		</dict>
 		<key>Headers/WPCommands+Alarm.h</key>
@@ -111,6 +115,13 @@
 			<key>hash2</key>
 			<data>
 			lhtymmELSpkR7UG9sowLLq3WBHd0OgOx655r6LCTrVM=
+			</data>
+		</dict>
+		<key>Headers/WPCommands+SwitchTableExtension.h</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			h4CYfFBJKAARr12MOIY8pqQ5FpMoyHlMmvUv70zqrHM=
 			</data>
 		</dict>
 		<key>Headers/WPCommands.h</key>
@@ -166,7 +177,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			djrE/dr0hGt26rZN5oTGzq/ezqgNPVxKp2x7f7dzCyQ=
+			nF7s6KbwmrfwYWQvW5I+N+Vrd1j24+96ZBvdpgTjLmY=
 			</data>
 		</dict>
 		<key>Modules/module.modulemap</key>

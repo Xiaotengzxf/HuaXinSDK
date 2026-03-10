@@ -236,7 +236,7 @@ dyld: Library not loaded: @rpath/WatchProtocolSDK.framework/WatchProtocolSDK
 
 ## 📝 许可证
 
-Copyright © 2026 Anker Innovations. All rights reserved.
+Copyright © 2026 bruce  . All rights reserved.
 
 ---
 

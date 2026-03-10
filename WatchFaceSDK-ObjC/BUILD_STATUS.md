@@ -172,7 +172,7 @@ Output-WatchFace-ObjC/
 如果需要重新编译，执行：
 
 ```bash
-cd /Users/anker/Downloads/SmartBracelet
+cd /Users/bruce/Downloads/SmartBracelet
 bash build_pure_objc_framework.sh
 ```
 
